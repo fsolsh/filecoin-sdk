@@ -41,3 +41,5 @@ filecoin.createWallet();
 2.导入私钥
 filecoin.importWallet("私钥");
 ```
+
+代码是在https://github.com/lishitao1992/filecoinj 这个作者的基础之上进行修改的，感谢！
