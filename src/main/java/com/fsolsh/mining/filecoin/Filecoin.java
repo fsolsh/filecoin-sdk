@@ -1,0 +1,457 @@
+package com.fsolsh.mining.filecoin;
+
+import com.fsolsh.mining.filecoin.config.NodeConfig;
+import com.fsolsh.mining.filecoin.constant.FilecoinCnt;
+import com.fsolsh.mining.filecoin.exception.*;
+import com.fsolsh.mining.filecoin.handler.FilecoinHandler;
+import com.fsolsh.mining.filecoin.model.result.*;
+import com.fsolsh.mining.filecoin.config.FilecoinProperties;
+import com.fsolsh.mining.filecoin.exception.*;
+import com.fsolsh.mining.filecoin.model.EasySend;
+import com.fsolsh.mining.filecoin.model.GetGas;
+import com.fsolsh.mining.filecoin.model.Transaction;
+import com.fsolsh.mining.filecoin.model.result.*;
+import lombok.Getter;
+
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.List;
+
+public class Filecoin {
+
+    @Getter
+    private final FilecoinHandler filcoinHandler;
+
+    public Filecoin(String url, String nodeAuthorization) {
+        NodeConfig.getINSTANCE().setNodeType(FilecoinCnt.PRIVATE_NODE);
+        NodeConfig.getINSTANCE().setUrl(url);
+        NodeConfig.getINSTANCE().setNodeAuthorization(nodeAuthorization);
+        filcoinHandler = new FilecoinHandler();
+    }
+
+    public Filecoin(String url, String rpcUserName, String rpcSecret) {
+        NodeConfig.getINSTANCE().setNodeType(FilecoinCnt.INFURA_NODE);
+        NodeConfig.getINSTANCE().setUrl(url);
+        NodeConfig.getINSTANCE().setRpcUserName(rpcUserName);
+        NodeConfig.getINSTANCE().setRpcSecret(rpcSecret);
+        filcoinHandler = new FilecoinHandler();
+    }
+
+    public Filecoin(FilecoinProperties filecoinProperties) {
+        NodeConfig.getINSTANCE().setUrl(filecoinProperties.getRpcUrl());
+        //infura节点
+        if (filecoinProperties.getNodeType().equalsIgnoreCase(FilecoinCnt.INFURA_NODE)) {
+            NodeConfig.getINSTANCE().setNodeType(FilecoinCnt.INFURA_NODE);
+            NodeConfig.getINSTANCE().setRpcUserName(filecoinProperties.getRpcUsername());
+            NodeConfig.getINSTANCE().setRpcSecret(filecoinProperties.getRpcSecret());
+        } else {
+            //默认私有节点
+            NodeConfig.getINSTANCE().setNodeType(FilecoinCnt.PRIVATE_NODE);
+            NodeConfig.getINSTANCE().setNodeAuthorization(filecoinProperties.getRpcToken());
+        }
+        filcoinHandler = new FilecoinHandler();
+    }
+
+    /**
+     * 创建钱包
+     *
+     * @return WalletResult
+     */
+    public WalletResult createWallet() throws WalletException {
+        return filcoinHandler.createWallet();
+    }
+
+    /**
+     * rpc节点创建钱包
+     *
+     * @return WalletResult
+     */
+    public String createWalletRpc() throws WalletException, ExecuteException {
+        return filcoinHandler.createWalletRpc(FilecoinCnt.DEFAULT_TIMEOUT);
+    }
+
+    /**
+     * 导入钱包
+     *
+     * @return WalletResult
+     */
+    public WalletResult importWallet(String privateKey) throws WalletException {
+        return filcoinHandler.importWallet(privateKey);
+    }
+
+    /**
+     * 导入钱包
+     *
+     * @return WalletResult
+     */
+    public WalletResult importWallet(byte[] privateKey) throws WalletException {
+        return filcoinHandler.importWallet(privateKey);
+    }
+
+    /**
+     * 转账
+     *
+     * @param transaction 参数
+     * @param privateKey  私钥
+     * @return SendResult
+     * @throws SendException    异常
+     * @throws ExecuteException 异常
+     */
+    public SendResult send(Transaction transaction, String privateKey) throws SendException, ExecuteException {
+        return send(transaction, privateKey, FilecoinCnt.DEFAULT_TIMEOUT);
+    }
+
+    /**
+     * 转账
+     *
+     * @param transaction 参数
+     * @param privateKey  私钥
+     * @param timeout     请求超时时间 单位：ms
+     * @return SendResult
+     * @throws SendException    异常
+     * @throws ExecuteException 异常
+     */
+    public SendResult send(Transaction transaction, String privateKey, int timeout) throws SendException, ExecuteException {
+        return filcoinHandler.send(transaction, privateKey, timeout);
+    }
+
+    /**
+     * 简单转账
+     *
+     * @param send 参数
+     * @return SendResult
+     * @throws SendException    异常
+     * @throws ExecuteException 异常
+     */
+    public SendResult easySend(EasySend send) throws ParameException, ExecuteException, SendException {
+        return easySend(send, FilecoinCnt.DEFAULT_TIMEOUT);
+    }
+
+    /**
+     * 简单转账
+     *
+     * @param send    参数
+     * @param timeout 超时时间 单位：ms
+     * @return SendResult
+     * @throws SendException    异常
+     * @throws ExecuteException 异常
+     * @throws ParameException
+     */
+    public SendResult easySend(EasySend send, int timeout) throws ParameException, ExecuteException, SendException {
+        return filcoinHandler.easySend(send, timeout);
+    }
+
+    /**
+     * 获取nonce值
+     *
+     * @param address 地址
+     * @return int
+     * @throws ExecuteException 异常
+     * @throws ParameException
+     */
+    public int getNonce(String address) throws ExecuteException, ParameException {
+        return getNonce(address, FilecoinCnt.DEFAULT_TIMEOUT);
+    }
+
+    /**
+     * 获取nonce值
+     *
+     * @param address 地址
+     * @param timeout 超时时间 单位：ms
+     * @return int
+     * @throws ExecuteException 异常
+     * @throws ParameException
+     */
+    public int getNonce(String address, int timeout) throws ExecuteException, ParameException {
+        return filcoinHandler.getNonce(address, timeout);
+    }
+
+    /**
+     * 获取gas价格
+     *
+     * @param gas 参数
+     * @return GasResult
+     * @throws ParameException  异常
+     * @throws ExecuteException 异常
+     */
+    public GasResult getGas(GetGas gas) throws ParameException, ExecuteException {
+        return getGas(gas, FilecoinCnt.DEFAULT_TIMEOUT);
+    }
+
+    /**
+     * 获取gas价格
+     *
+     * @param gas     参数
+     * @param timeout 时时间 单位：ms
+     * @return GasResult
+     * @throws ParameException  异常
+     * @throws ExecuteException 异常
+     */
+    public GasResult getGas(GetGas gas, int timeout) throws ParameException, ExecuteException {
+        return filcoinHandler.getGas(gas, timeout);
+    }
+
+    /**
+     * 查询地址余额
+     *
+     * @param address 钱包地址
+     * @return BalanceResult
+     * @throws BalanceOfException 异常
+     * @throws ExecuteException   异常
+     */
+    public BalanceResult balanceOf(String address) throws BalanceOfException, ExecuteException {
+        return balanceOf(address, FilecoinCnt.DEFAULT_TIMEOUT);
+    }
+
+    /**
+     * 查询地址余额
+     *
+     * @param address 钱包地址
+     * @param timeout 时时间 单位：ms
+     * @return BalanceResult
+     * @throws BalanceOfException 异常
+     * @throws ExecuteException   异常
+     */
+    public BalanceResult balanceOf(String address, int timeout) throws BalanceOfException, ExecuteException {
+        return filcoinHandler.balanceOf(address, timeout);
+    }
+
+    /**
+     * 获取钱包默认地址
+     *
+     * @return
+     * @throws ExecuteException
+     */
+    public String getWalletDefaultAddress() throws ExecuteException {
+        return getWalletDefaultAddress(FilecoinCnt.DEFAULT_TIMEOUT);
+    }
+
+    /**
+     * 获取钱包默认地址
+     *
+     * @return
+     * @throws ExecuteException
+     */
+    public String getWalletDefaultAddress(int timeout) throws ExecuteException {
+        return filcoinHandler.getWalletDefaultAddress(timeout);
+    }
+
+
+    /**
+     * 校验地址有效性
+     *
+     * @param address
+     * @return
+     * @throws ExecuteException
+     * @throws ParameException
+     */
+    public boolean validateAddress(String address) throws ExecuteException, ParameException {
+        return validateAddress(address, FilecoinCnt.DEFAULT_TIMEOUT);
+    }
+
+
+    /**
+     * 校验地址有效性
+     *
+     * @param address
+     * @param timeout
+     * @return
+     * @throws ExecuteException
+     * @throws ParameException
+     */
+    public boolean validateAddress(String address, int timeout) throws ExecuteException, ParameException {
+        return filcoinHandler.validateAddress(address, timeout);
+    }
+
+    /**
+     * 根据消息cid获取消息详情
+     *
+     * @param cid
+     * @return
+     * @throws ExecuteException
+     * @throws ParameException
+     */
+    public MessagesResult getMessageByCid(String cid) throws ExecuteException, ParameException {
+        return getMessageByCid(cid, FilecoinCnt.DEFAULT_TIMEOUT);
+    }
+
+    public MessagesResult getMessageByCid(String cid, int timeout) throws ExecuteException, ParameException {
+        return filcoinHandler.getMessageByCid(cid, timeout);
+    }
+
+    /**
+     * 根据区块cid获取消息
+     *
+     * @param blockCid
+     * @return
+     * @throws ExecuteException
+     * @throws ParameException
+     */
+    public List<MessagesResult> getMessagesByBlockCid(String blockCid) throws ExecuteException, ParameException {
+        return getMessagesByBlockCid(blockCid, FilecoinCnt.DEFAULT_TIMEOUT);
+    }
+
+    public List<MessagesResult> getMessagesByBlockCid(String blockCid, int timeout) throws ExecuteException, ParameException {
+        return filcoinHandler.getChainBlockMessages(blockCid, timeout);
+    }
+
+    /**
+     * 获取当前最新Tip
+     *
+     * @return
+     * @throws ExecuteException
+     */
+    public ChainResult getChainHead() throws ExecuteException {
+        return getChainHead(FilecoinCnt.DEFAULT_TIMEOUT);
+    }
+
+    public ChainResult getChainHead(int timeout) throws ExecuteException {
+        return filcoinHandler.getChainHead(timeout);
+    }
+
+    /**
+     * 根据高度获取Tip
+     *
+     * @param height
+     * @return
+     * @throws ExecuteException
+     * @throws ParameException
+     */
+    public ChainResult getChainTipSetByHeight(BigInteger height) throws ExecuteException, ParameException {
+        return getChainTipSetByHeight(height, FilecoinCnt.DEFAULT_TIMEOUT);
+    }
+
+    public ChainResult getChainTipSetByHeight(BigInteger height, int timeout) throws ExecuteException, ParameException {
+        return filcoinHandler.getChainTipSetByHeight(height, timeout);
+    }
+
+    /**
+     * 获取指定高度的所有消息
+     *
+     * @param height
+     * @return
+     */
+    public ChainMessagesResult getMessagesByHeight(BigInteger height) throws ParameException, ExecuteException {
+        ChainMessagesResult res = null;
+        ChainResult chainTipSet = getChainTipSetByHeight(height);
+        if (chainTipSet != null && chainTipSet.getBlockCidList() != null) {
+            res = ChainMessagesResult.builder().blockCidList(chainTipSet.getBlockCidList()).build();
+            ArrayList<MessagesResult> messageList = new ArrayList<>();
+            for (String blockCid : chainTipSet.getBlockCidList()) {
+                List<MessagesResult> messagesList = getMessagesByBlockCid(blockCid);
+                messageList.addAll(messagesList);
+            }
+            res.setMessageList(messageList);
+        }
+        return res;
+    }
+
+    /**
+     * 获取指定高度父块的所有消息
+     *
+     * @param height
+     * @return
+     */
+    public ChainMessagesResult getParentMessagesByHeight(BigInteger height) throws ParameException, ExecuteException {
+        ChainMessagesResult res = null;
+        ChainResult chainTipSet = getChainTipSetByHeight(height);
+        if (chainTipSet != null && chainTipSet.getBlockCidList() != null) {
+            res = ChainMessagesResult.builder()
+                    .blockCidList(chainTipSet.getBlockCidList())
+                    .parentBlockCidList(chainTipSet.getParentBlockCidList())
+                    .messageList(chainGetParentMessages(chainTipSet.getBlockCidList().get(0)))
+                    .build();
+        }
+        return res;
+    }
+
+    /**
+     * 获取消息收据
+     *
+     * @param messageCid
+     * @return
+     * @throws ParameException
+     * @throws ExecuteException
+     */
+    public StateGetReceiptResult stateGetReceipt(String messageCid) throws ParameException, ExecuteException {
+        return stateGetReceipt(messageCid, FilecoinCnt.DEFAULT_TIMEOUT);
+    }
+
+    public StateGetReceiptResult stateGetReceipt(String messageCid, int timeout) throws ParameException, ExecuteException {
+        return filcoinHandler.stateGetReceipt(messageCid, timeout);
+    }
+
+
+    /**
+     * 指定区块的父链头集合中存储的所有消息
+     *
+     * @param childBlockCid
+     * @return
+     * @throws ExecuteException
+     * @throws ParameException
+     */
+    public List<MessagesResult> chainGetParentMessages(String childBlockCid) throws ExecuteException, ParameException {
+        return this.chainGetParentMessages(childBlockCid, FilecoinCnt.DEFAULT_TIMEOUT);
+    }
+
+
+    public List<MessagesResult> chainGetParentMessages(String childBlockCid, int timeout) throws ExecuteException, ParameException {
+        return filcoinHandler.chainGetParentMessages(childBlockCid, timeout);
+    }
+
+    /**
+     * 根据区块cid获取父区块所有消息的收据
+     *
+     * @param childBlockCid
+     * @return
+     * @throws ExecuteException
+     * @throws ParameException
+     */
+
+    public List<StateGetReceiptResult> chainGetParentReceipts(String childBlockCid) throws ExecuteException, ParameException {
+        return this.chainGetParentReceipts(childBlockCid, FilecoinCnt.DEFAULT_TIMEOUT);
+    }
+
+
+    public List<StateGetReceiptResult> chainGetParentReceipts(String childBlockCid, int timeout) throws ExecuteException, ParameException {
+        return filcoinHandler.chainGetParentReceipts(childBlockCid, timeout);
+    }
+
+    /**
+     * 根据区块高度获取父区块所有消息的收据
+     *
+     * @param height
+     * @param timeout
+     * @return
+     * @throws ExecuteException
+     * @throws ParameException
+     */
+    public List<StateGetReceiptResult> chainGetParentReceiptsByHeight(BigInteger height, int timeout) throws ExecuteException, ParameException {
+        ChainResult chain = getChainTipSetByHeight(height, timeout);
+        if (chain != null && chain.getBlockCidList() != null && chain.getBlockCidList().size() > 0) {
+            return chainGetParentReceipts(chain.getBlockCidList().get(0), timeout);
+        }
+        return null;
+    }
+
+
+    /**
+     * 根据区块cid和消息列表下标索引获取父区块中指定下标消息收据
+     * （很难懂的备注，因为对接FILCoin太坑了）
+     *
+     * @param childBlockCid
+     * @param index
+     * @param timeout
+     * @return
+     * @throws ExecuteException
+     * @throws ParameException
+     */
+    public StateGetReceiptResult indexChainGetParentReceipts(String childBlockCid, int index, int timeout) throws ExecuteException, ParameException {
+        return filcoinHandler.chainGetParentReceipts(childBlockCid, index, timeout);
+    }
+
+    public StateGetReceiptResult indexChainGetParentReceipts(String childBlockCid, int index) throws ExecuteException, ParameException {
+        return filcoinHandler.chainGetParentReceipts(childBlockCid, index, FilecoinCnt.DEFAULT_TIMEOUT);
+    }
+
+}
